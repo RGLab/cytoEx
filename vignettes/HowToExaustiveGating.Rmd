@@ -1,0 +1,59 @@
+---
+title: "How to do Exaustive Gating"
+author: "Mike Jiang"
+date: "September 27, 2016"
+output: html_document
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE
+)
+```
+```{r }
+library(cytoEx)
+```
+
+## Load existing gating set
+```{r}
+library(flowWorkspace)
+dataDir <- system.file("extdata",package="flowWorkspaceData")
+gs <- load_gs(list.files(dataDir, pattern = "gs_manual",full = TRUE))
+```
+
+## create a copy of gs
+```{r}
+gs2 <- clone(gs, isNew = FALSE, isEmpty = FALSE)
+```
+
+## Start from singlets node
+```{r}
+for(node in getChildren(gs2, "singlets"))
+  Rm(node, gs2)
+```
+
+## Run the exaustive gating
+```{r}
+min.percent <- 0.2
+openCyto::gating("singlets", gs2
+       , min.count = 2000
+       , min.percent = min.percent
+       , debug.mode = T
+       , max.depth = 5
+       , parallel_type = "multicore"
+       , mc.cores = 10
+       , gating.function = openCyto:::.flowClust.1d
+       , K = 2
+       , fast = TRUE
+       , marker.selection = best.ICL
+       )
+```
+
+## Interactively inspect the gating tree
+```{r treeGadget}
+shinyCyto::gatingTreeApp(gs2)
+```
+
