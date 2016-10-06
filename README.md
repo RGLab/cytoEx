@@ -1,4 +1,4 @@
-# cytoEx: Exaustive autogating for openCyto
+# cytoEx: Exhaustive autogating for openCyto
 Mike Jiang  
 September 27, 2016  
 
@@ -32,7 +32,7 @@ for(node in getChildren(gs2, "singlets"))
   Rm(node, gs2)
 ```
 
-## Run the exaustive gating using `openCyto::mindensity`
+## Run the exhaustive gating using `openCyto::mindensity`
 
 ```r
 gating("singlets", gs2, gating.function = mindensity)

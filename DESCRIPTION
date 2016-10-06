@@ -1,6 +1,6 @@
 Package: cytoEx
 Type: Package
-Title: The exaustive gating for openCyto
+Title: The exhaustive gating for openCyto
 Version: 0.0.90
 Authors@R: person("Mike", "Jiang", email = "wjiang2@fhcrc.org", role = c("aut", "cre"))
 Description: This package runs unsupervised gating and creates the gating

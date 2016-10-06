@@ -23,7 +23,7 @@ NULL
 #' #erase all the acestor nodes of CD3+
 #' Rm("CD3+", gs2)
 #'
-#' # run the exaustive gating from "singlets" node
+#' # run the exhaustive gating from "singlets" node
 #' gating("singlets", gs2, min.count = 2000, min.percent = 0.3)
 #'
 #' # or proceed from any leaf nodes of the existing gating tree
@@ -49,7 +49,7 @@ setMethod("gating", signature = c("character", "GatingSet"),
 
 #' @rdname gating
 #' @param marker.selection a function that selectes the best marker that has the best bi-module separation based on the various peak statistics (e.g. peak area ratio, peak distance, peak/valley ratio, etc...)
-#' @param gating.function the 1d gating function used for exaustive gating
+#' @param gating.function the 1d gating function used for exhaustive gating
 #' @param min.count the minimum number of cells that allows the gating proceed further
 #' @param max.depth the maximum depths of gating path. Default is -1, which is no limits.
 #' @param ... other arguments passed to \link{density} function.
@@ -144,7 +144,7 @@ gating.subnode <- function(parent, gs
           marker <- metrics.thresholded[ind, marker]
         }
         if(debug.mode){
-          set.openCyto.exaustive(gs@guid, parent, winner = chnl.selected, plotEnv = plotEnv, metrics = metrics)
+          set.openCyto.exhaustive(gs@guid, parent, winner = chnl.selected, plotEnv = plotEnv, metrics = metrics)
           }
 
         if(!is.null(chnl.selected)){

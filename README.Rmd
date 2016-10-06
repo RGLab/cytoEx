@@ -1,5 +1,5 @@
 ---
-title: "cytoEx: Exaustive autogating for openCyto"
+title: "cytoEx: Exhaustive autogating for openCyto"
 author: "Mike Jiang"
 date: "September 27, 2016"
 output: 
@@ -40,7 +40,7 @@ for(node in getChildren(gs2, "singlets"))
   Rm(node, gs2)
 ```
 
-## Run the exaustive gating using `openCyto::mindensity`
+## Run the exhaustive gating using `openCyto::mindensity`
 ```{r}
 gating("singlets", gs2, gating.function = mindensity)
 ```

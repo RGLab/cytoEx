@@ -1,5 +1,5 @@
 ---
-title: "How to do Exaustive Gating"
+title: "How to do Exhaustive Gating"
 author: "Mike Jiang"
 date: "September 27, 2016"
 output: html_document
@@ -35,7 +35,7 @@ for(node in getChildren(gs2, "singlets"))
   Rm(node, gs2)
 ```
 
-## Run the exaustive gating
+## Run the exhaustive gating
 ```{r}
 min.percent <- 0.2
 openCyto::gating("singlets", gs2
