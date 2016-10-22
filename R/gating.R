@@ -79,58 +79,29 @@ gating.subnode <- function(parent, gs
 
     nCell <- nrow(fr)
     if(nCell > min.count){#TODO: use options("openCyto")[[1]][["gating"]][["minEvents"]]
-      # apply the gating on each channel
 
-      # construct method call
+      #check if the markers have already been gated to
+      #avoid gating on the same marker repeately on the same path
+      is.gated <- sapply(channels, function(channel){
+        marker <- getChannelMarker(fr, channel)[, "desc"]
+        gated.markers <- strsplit(parent, split = "/")[[1]]
+        gated.markers <- gated.markers[-1] #rm the first empty string
+        matched <- sapply(gated.markers, function(i){
+          i <- sub("[\\+\\-]$", "", i)
+          grepl(i, marker)
+        })
+        any(matched)
 
-      thisFunc <- function(channel){
-                            marker <- getChannelMarker(fr, channel)[, "desc"]
-                            #avoid gating on the same marker repeately on the same path
-                            gated.markers <- strsplit(parent, split = "/")[[1]]
-                            gated.markers <- gated.markers[-1] #rm the first empty string
-                            is.gated <- sapply(gated.markers, function(i){
-                              i <- sub("[\\+\\-]$", "", i)
-                              grepl(i, marker)
-                              })
-                            if(any(is.gated)){
-                              g <- NULL
-                            }else{
-                              g <- gating.function(fr, channel, ...)
-                            }
+      })
+      channels <- channels[!is.gated]
 
-                            g
-                          }
-
-      thisCall <- substitute(sapply(channels))
-      thisCall[["FUN"]] <- as.symbol("thisFunc")
-
-
-      ## choose serial or parallel mode
-      if(parallel_type!="none")
-        require("parallel")
-      if (parallel_type == "multicore") {
-        # message("Running in parallel mode with ", mc.cores, " cores.")
-        thisCall[[1]] <- quote(mcmapply)
-        thisCall[["mc.cores"]] <- mc.cores
-        # thisCall[["mc.preschedule"]] <- FALSE #must set to FALSE to retain the names of the result list
-
-      }else if(parallel_type == "cluster"){
-        if(is.null(cl))
-          stop("cluster object 'cl' is empty!")
-        thisCall[[1]] <- quote(parSapply)
-        thisCall[["cl"]] <- cl
-        # thisCall[["fun"]] <- thisCall[["FUN"]]
-        # thisCall[["FUN"]] <- NULL
-        thisCall[["SIMPLIFY"]] <- FALSE
-      }
-
-      flist <- eval(thisCall)
-      flist <- flowWorkspace:::compact(flist)
-      if(length(flist) > 0){
+      if(length(channels) > 0){
         message("parent: ", parent)
         #get measurements for the cutpoints
         plotEnv <- new.env(parent = emptyenv())
-        metrics <- marker.selection(flist, fr, debug.mode = debug.mode, plotEnv = plotEnv)
+        metrics <- marker.selection(fr, debug.mode = debug.mode, plotEnv = plotEnv
+                                    , mc.cores = mc.cores
+                                    , parallel_type = parallel_type)
         # add marker column for the purpose of visualization
         metrics[, marker := getChannelMarker(fr, channel)[["desc"]], by = channel]
         metrics.thresholded <- metrics[area.ratio >= min.percent, ]
@@ -148,9 +119,7 @@ gating.subnode <- function(parent, gs
           }
 
         if(!is.null(chnl.selected)){
-          gate <- flist[[chnl.selected]]
-          # channel <- as.vector(parameters(gate))
-          # marker <- getChannelMarker(fr, chnl.selected)[["desc"]]
+
           #clean the marker name(sometime it is in the form of 'antigen isotypecontrol',e.g 'CD38 APC')
           marker <- strsplit(marker, " ")[[1]][[1]]
           message("selected marker: ", marker)
@@ -158,6 +127,7 @@ gating.subnode <- function(parent, gs
           for(sub in c("+", "-")){
             negated <- sub == "-"
             child <- paste0(marker, sub)
+            gate <- gating.function(fr, chnl.selected, ...)
             suppressMessages(add(gs, gate, name = child, parent = parent, negated = negated))
             node.path <- file.path(parent,child)
             suppressMessages(recompute(gs, node.path))
