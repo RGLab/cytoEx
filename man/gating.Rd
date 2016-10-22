@@ -11,7 +11,7 @@
 gating.subnode(parent, gs, gating.function = mindensity,
   marker.selection = best.separation, min.count = 1000, min.percent = 0.2,
   debug.mode = FALSE, max.depth = -1, mc.cores = getOption("mc.cores",
-  2L), parallel_type = c("none", "multicore", "cluster"), cl = NULL, ...)
+  2L), parallel_type = c("multicore", "cluster", "none"), cl = NULL, ...)
 }
 \arguments{
 \item{x}{a GatingSet}
@@ -20,7 +20,7 @@ gating.subnode(parent, gs, gating.function = mindensity,
 
 \item{...}{other arguments passed to \link{density} function.}
 
-\item{gating.function}{the 1d gating function used for exaustive gating}
+\item{gating.function}{the 1d gating function used for exhaustive gating}
 
 \item{marker.selection}{a function that selectes the best marker that has the best bi-module separation based on the various peak statistics (e.g. peak area ratio, peak distance, peak/valley ratio, etc...)}
 
@@ -45,7 +45,7 @@ gs2 <- clone(gs, isNew = FALSE, isEmpty = FALSE)
 #erase all the acestor nodes of CD3+
 Rm("CD3+", gs2)
 
-# run the exaustive gating from "singlets" node
+# run the exhaustive gating from "singlets" node
 gating("singlets", gs2, min.count = 2000, min.percent = 0.3)
 
 # or proceed from any leaf nodes of the existing gating tree

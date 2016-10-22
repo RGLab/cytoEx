@@ -23,3 +23,4 @@ Collate:
     'utils.R'
     'gating.R'
     'getMFI.R'
+    'ggFlowClust.hist.R'
