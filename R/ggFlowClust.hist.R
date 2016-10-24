@@ -18,7 +18,7 @@ ggflowClust.hist <- function(x, data=NULL, subset=1, include=1:(x@K)
 
   p <- ggplot(df, aes(x = x, y = ..density..))
   if (histogram){
-    p <- p  + geom_histogram()
+    p <- p  + geom_histogram(colour = "grey50", fill = "transparent")
   }
   #fitted density
   p <- p + geom_line(aes(y = den))

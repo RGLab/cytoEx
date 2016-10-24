@@ -99,7 +99,7 @@ gating.subnode <- function(parent, gs
         message("parent: ", parent)
         #get measurements for the cutpoints
         plotEnv <- new.env(parent = emptyenv())
-        metrics <- marker.selection(fr, debug.mode = debug.mode, plotEnv = plotEnv
+        metrics <- marker.selection(fr[,channels], debug.mode = debug.mode, plotEnv = plotEnv
                                     , mc.cores = mc.cores
                                     , parallel_type = parallel_type)
         # add marker column for the purpose of visualization
