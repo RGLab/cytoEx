@@ -1,15 +1,19 @@
-best.dip <- function(fr, debug.mode=FALSE, plotEnv=new.env(parent=emptyenv()), parallel_type, mc.cores,
-                     CHANNELS = c(), ALPHA = 0.01, P.ITERS=10000, SS.SIZE = 150, ...) {
+#' @importFrom flowClust flowClust
+best.dip.ICL <- function(fr, debug.mode=FALSE, plotEnv=new.env(parent=emptyenv()), parallel_type, mc.cores,
+                     CHANNELS = c(), ALPHA = 0.01, P.ITERS=10000, SS.SIZE = 200, ...) {
     #determine the best channel according to a two-stage process, described below
         
-    #STEP 1: for each channel, compute p-values for Hartigan's dip statistic (with bonferonni correction) to decide if any channels are multimodal. 
-    #        Threshold at \alpha = ALPHA/(# of channels) 
-    #        If no channel is below \alpha, return data.table with all areas == 0 (currently indicates no channel selected to ambient gating function)
-    #        Else, proceed to step 2.
+    #STEP 1: is the same as best.dip.R
 
     #STEP 2: If a unique minimum p-value exists, select the corresponding channel.
     #        Otherwise, sub-sample from each channel and create bootstrap distribution of p-values for each candidate channel (those with same minimum). 
-    #        Compute mean of each bootstrap, and select channel with minimum average p-value.
+    #        Compute mean of each bootstrap sample.
+    #        Initially, consider only channels with bootstrap means below threshold 0.05 
+    #        If no channels meet this criteria, increment the threshold by 0.01 until at least one channel is in contention.
+    #        If a unique channel falls below the threshold, pick it.
+    #        If multiple channels fall below the threshold, pick model with maximum difference in ICL, where the difference is:
+    #           (ICL from mixture with two components) - (ICL from mixture with three components).
+    require(flowClust)
     require(diptest)
     #if the caller provides a customized vector of potential channels, use it.
     if (length(CHANNELS) > 0) {
@@ -39,7 +43,7 @@ best.dip <- function(fr, debug.mode=FALSE, plotEnv=new.env(parent=emptyenv()), p
     
     # if no channels pass the intial screening, return a table with  all scores set to -1
     if (length(first.screen) == 0) {
-        return.table <- data.table(channel=potential.channels,score=-1,area.ratio=0,intial.p.values = first.p.list, second.p.values = 1, b.alpha = bonferonni.alpha)
+        return.table <- data.table(channel=potential.channels,score=-1,area.ratio=0,intial.p.values = first.p.list, second.p.values = 1, icl.record = -Inf, b.alpha = bonferonni.alpha)
         return(return.table)
     }
 
@@ -48,19 +52,39 @@ best.dip <- function(fr, debug.mode=FALSE, plotEnv=new.env(parent=emptyenv()), p
         second.pv <- rep(1, length(potential.channels)) #this vector is for reporting
         second.pv[which(potential.channels==first.screen)] <- min(unique(first.p.list))
         selected.channel <- first.screen
+        icl.record <- rep(-Inf, length(potential.channels)) #this vector is also for reporting
     }
 
     # finally, if more than one channel passes the intial screen, there are ties. proceed to stage two.
     else {
-        second.pv <- rep(1, length(potential.channels)) #this vector is for reporting
-        p.list <- c()
+        icl.record <- second.pv <- rep(-Inf, length(potential.channels)) #this vector is for reporting
+        dicl.list <- p.list <- c()
         for (candidate in first.screen) {
             sub.sampled.p.value <- sub.dip(P.ITERS,cyto.data[,which(colnames(cyto.data) == candidate)],SS.SIZE)
             second.pv[which(potential.channels==candidate)] <- sub.sampled.p.value
             p.list <- append(p.list,sub.sampled.p.value)
+            mixtures <- flowClust(fr,varNames=c(candidate),K=2:3, B=10000, lambda=1, trans=0)
+            m.icls <- criterion(mixtures,"ICL")
+            icl.difference <- m.icls[1]-m.icls[2]
+            icl.record[which(potential.channels==candidate)] <- icl.difference
+            dicl.list <- append(dicl.list,icl.difference)
         }
-        selected.channel <- first.screen[which(p.list == min(unique(p.list)))]
+        
+        thresh.p <- 0.05
+        NULL.SCREEN <- TRUE
+        while (NULL.SCREEN) {
+            second.screen <- first.screen[which(p.list <= thresh.p)]
+            if (length(second.screen) == 0) {
+                thresh.p <- thresh.p + 0.01
+            }
+            else {
+                NULL.SCREEN <- FALSE
+            }
+        }
+        dicl.sub <- dicl.list[which(p.list <= thresh.p)]
+        selected.channel <- second.screen[which(dicl.sub == max(unique(dicl.sub)))]
     }
+    
 
     #at this point, do not expect numerical ties for p.values because we sub-sampled.
     if (length(selected.channel) > 1) {
@@ -72,6 +96,12 @@ best.dip <- function(fr, debug.mode=FALSE, plotEnv=new.env(parent=emptyenv()), p
     scores[which(potential.channels==selected.channel)] <- 1
     areas <- rep(0, length(potential.channels))
     areas[which(potential.channels==selected.channel)] <- 1
-    return.table <- data.table(channel=potential.channels,score=scores,area.ratio=areas,intial.p.values = first.p.list, second.p.values=second.pv,b.alpha = bonferonni.alpha)
+    return.table <- data.table(channel=potential.channels,
+                               score=scores,
+                               area.ratio=areas,
+                               intial.p.values = first.p.list,
+                               second.p.values=second.pv,
+                               diff.icl=icl.record,
+                               b.alpha = bonferonni.alpha)
     return(return.table)
 }

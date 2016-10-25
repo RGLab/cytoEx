@@ -14,11 +14,15 @@ Imports:
     data.table,
     ncdfFlow,
     ggcyto (>= 1.1.12),
-    ggplot2
+    ggplot2,
+    diptest
 RoxygenNote: 5.0.1
 Collate:
     'best.ICL.R'
     'best.dip.R'
+    'best.dip.ICL.R'
+    'best.dip.ICL.sub.R'
+    'sub.dip.R'
     'best.separation.R'
     'options.R'
     'utils.R'
