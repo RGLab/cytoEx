@@ -2,6 +2,12 @@
 % Please edit documentation in R/best.dip.R
 \name{best.dip}
 \alias{best.dip}
+\title{determine the best channel according to a two-stage process, described below
+       
+STEP 1: for each channel, compute p-values for Hartigan's dip statistic (with bonferonni correction) to decide if any channels are multimodal. 
+       Threshold at bonferonni.alpha = ALPHA/(# of channels) 
+       If no channel is below bonferonni.alpha, return data.table with all areas == 0 (indicates no channel selected to ambient gating function)
+       Else, proceed to step 2.}
 \usage{
 best.dip(fr, debug.mode = FALSE, plotEnv = new.env(parent = emptyenv()),
   parallel_type, mc.cores, ALPHA = 0.01, P.ITERS = 10000, SS.SIZE = 200,
@@ -16,5 +22,10 @@ best.dip(fr, debug.mode = FALSE, plotEnv = new.env(parent = emptyenv()),
 }
 \value{
 Data table with decision metrics for gating method.
+}
+\description{
+STEP 2: If a unique minimum p-value exists, select the corresponding channel.
+       Otherwise, sub-sample from each channel and create distribution of dip-statistic p-values for each candidate channel (those that tied). 
+       Compute mean of each sub-sample, and select channel with minimum average p-value.
 }
 

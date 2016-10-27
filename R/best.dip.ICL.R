@@ -1,7 +1,3 @@
-#' @importFrom diptest dip.test
-#' @importFrom flowClust flowClust
-#' @importFrom parallel mclapply
-#'
 #' determine the best channel according to a two-stage process, described below
 #' 
 #' STEP 1: is the same as best.dip.R
@@ -14,11 +10,12 @@
 #'         If a unique channel falls below the threshold, pick it.
 #'         If multiple channels fall below the threshold, pick model with maximum difference in ICL, where the difference is:
 #'            (ICL from mixture with two components) - (ICL from mixture with three components).
-#' 
+#' @importFrom diptest dip.test
+#' @importFrom flowClust flowClust
+#' @importFrom parallel mclapply
 #' @param ALPHA user selected significance level for channel-wide dip statistic. bonferonni correction applied to this value.
 #' @param P.ITERS number of sub-samples taken from channels which pass initial screen
 #' @param SS.SIZE size of sub-sample taken from channel which passes the initial screen
-#' 
 #' @return Data table with decision metrics for gating method.
 
 best.dip.ICL <- function(fr, debug.mode=FALSE, plotEnv=new.env(parent=emptyenv()), parallel_type, mc.cores,

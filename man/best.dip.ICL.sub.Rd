@@ -2,6 +2,9 @@
 % Please edit documentation in R/best.dip.ICL.sub.R
 \name{best.dip.ICL.sub}
 \alias{best.dip.ICL.sub}
+\title{determine the best channel according to a two-stage process, described below
+   
+STEP 1: is the same as best.dip.R}
 \usage{
 best.dip.ICL.sub(fr, debug.mode = FALSE, plotEnv = new.env(parent =
   emptyenv()), parallel_type, mc.cores, ALPHA = 0.01, P.ITERS = 10000,
@@ -16,5 +19,13 @@ best.dip.ICL.sub(fr, debug.mode = FALSE, plotEnv = new.env(parent =
 }
 \value{
 Data table with decision metrics for gating method.
+}
+\description{
+STEP 2: If a unique minimum p-value exists, select the corresponding channel.
+        Otherwise, sub-sample from each channel and create a distribution of p-values for each candidate channel (they tied).
+        Compute mean of each bootstrap sample AND difference in ICL for each channel where, for a given channel, we compute
+           (ICL from mixture with two components) - (ICL from mixture with three components).
+        Subset to only consider models with a positive difference in ICL
+        Among these models, pick the model with the minimum mean sub-sampled p-value.
 }
 
