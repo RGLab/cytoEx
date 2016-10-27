@@ -1,29 +1,28 @@
+#' @importFrom diptest dip.test
 #' @importFrom flowClust flowClust
-best.dip.ICL.sub <- function(fr, debug.mode=FALSE, plotEnv=new.env(parent=emptyenv()), parallel_type, mc.cores,
-                             CHANNELS = c(), ALPHA = 0.01, P.ITERS=10000, SS.SIZE = 200, ...) {
-    #determine the best channel according to a two-stage process, described below
-        
-    #STEP 1: is the same as best.dip.R
+#' @importFrom parallel mclapply 
+#'
+#' determine the best channel according to a two-stage process, described below
+#'    
+#' STEP 1: is the same as best.dip.R
+#'
+#' STEP 2: If a unique minimum p-value exists, select the corresponding channel.
+#'         Otherwise, sub-sample from each channel and create a distribution of p-values for each candidate channel (they tied).
+#'         Compute mean of each bootstrap sample AND difference in ICL for each channel where, for a given channel, we compute
+#'            (ICL from mixture with two components) - (ICL from mixture with three components).
+#'         Subset to only consider models with a positive difference in ICL
+#'         Among these models, pick the model with the minimum mean sub-sampled p-value.
+#' 
+#' @param ALPHA user selected significance level for channel-wide dip statistic. bonferonni correction applied to this value.
+#' @param P.ITERS number of sub-samples taken from channels which pass initial screen
+#' @param SS.SIZE size of sub-sample taken from channel which passes the initial screen
+#' 
+#' @return Data table with decision metrics for gating method.
 
-    #STEP 2: If a unique minimum p-value exists, select the corresponding channel.
-    #        Otherwise, sub-sample from each channel and create bootstrap distribution of p-values for each candidate channel (those with same minimum). 
-    #        Compute mean of each bootstrap sample AND difference in ICL for each channel where, for a given channel, we compute
-    #           (ICL from mixture with two components) - (ICL from mixture with three components).
-    #        Subset to only consider models with a positive difference in ICL
-    #        Among these models, pick the model with the minimum mean bootstrapped p-value.
-    require(flowClust)
-    require(diptest)
-    #if the caller provides a customized vector of potential channels, use it.
-    if (length(CHANNELS) > 0) {
-        potential.channels <-  CHANNELS
-    }
-    #otherwise, grab all the channels from the flow frame, and then remove forward scatter, side scatter, and time columns (if present).
-    else {
-        bad.channels <- c("FSC-A","FSC-H","FSC-W","SSC-A","Time")
-        all.channels <- fr@parameters$name
-        potential.channels <- setdiff(all.channels,bad.channels)
-    }
-    #with the potential channels selected, apply bonferonni correction
+best.dip.ICL.sub <- function(fr, debug.mode=FALSE, plotEnv=new.env(parent=emptyenv()), parallel_type, mc.cores,
+                             ALPHA = 0.01, P.ITERS=10000, SS.SIZE = 200, ...) {
+    potential.channels <- fr@parameters$name
+    #apply bonferonni correction
     bonferonni.alpha <- ALPHA/length(potential.channels)
 
     #get the cytometry data from the flow frame
@@ -55,18 +54,47 @@ best.dip.ICL.sub <- function(fr, debug.mode=FALSE, plotEnv=new.env(parent=emptye
 
     # finally, if more than one channel passes the intial screen, there are ties. proceed to stage two.
     else {
-        icl.record <- second.pv <- rep(-Inf, length(potential.channels)) #this vector is for reporting
-        dicl.list <- p.list <- c()
-        for (candidate in first.screen) {
-            sub.sampled.p.value <- sub.dip(P.ITERS,cyto.data[,which(colnames(cyto.data) == candidate)],SS.SIZE)
-            second.pv[which(potential.channels==candidate)] <- sub.sampled.p.value
-            p.list <- append(p.list,sub.sampled.p.value)
-            mixtures <- flowClust(fr,varNames=c(candidate),K=2:3, B=10000, lambda=1, trans=0)
+        get.dip.and.icl <- function(CAND) {
+            cand.data <- cyto.data[,which(colnames(cyto.data) == CAND)]
+            emp <- rep(NA,P.ITERS)
+            
+            sub.sample.dip.p <- function(x) {
+                NEGATIVES <- TRUE
+                while (NEGATIVES) {
+                    sub.s <- sample(cand.data,size=SS.SIZE,replace=TRUE)
+                    if (min(sub.s) > 0) NEGATIVES <- FALSE
+                }
+                return(suppressMessages(diptest::dip.test(sub.s))$p.value)
+            }
+            
+            mixtures <- flowClust(fr,varNames=c(CAND),K=2:3, B=10000, lambda=1, trans=0)
             m.icls <- criterion(mixtures,"ICL")
             icl.difference <- m.icls[1]-m.icls[2]
-            icl.record[which(potential.channels==candidate)] <- icl.difference
-            dicl.list <- append(dicl.list,icl.difference)
+            
+            if (parallel_type == "none") dip.sub <- mean(unlist(lapply(emp,FUN=sub.sample.dip.p)))
+            else dip.sub <- mean(unlist(parallel::mclapply(emp,FUN=sub.sample.dip.p)))
+            return(list(dip.sub,icl.difference))
         }
+
+        #joint list is a flattened list matched to candidate channel in the following way
+        #odd index: the mean of a sub-sampled p.value for a given channel
+        #odd index + 1: the difference in icl for that channel
+        if (parallel_type == "none") joint.list <- unlist(lapply(first.screen,FUN=get.dip.and.icl))
+        else joint.list <- unlist(parallel::mclapply(first.screen,FUN=get.dip.and.icl, mc.cores = mc.cores))
+
+        #record these quanities for metrics, and generate p.list and  mean of sub-sampled p-values
+        second.pv <- rep(1, length(potential.channels)) 
+        icl.record <- rep(-Inf, length(potential.channels))
+        dicl.list <- p.list <- c()
+        i <- 1
+        for (candidate in first.screen) {
+            second.pv[which(potential.channels==candidate)] <- joint.list[i]
+            icl.record[which(potential.channels==candidate)] <- joint.list[(i+1)]
+            p.list <- append(p.list,joint.list[i])
+            dicl.list <- append(dicl.list,joint.list[(i+1)])
+            i <- (i+2) #step by two to arrive at next sub-sampled p.value.
+        }
+        
         
         #first, sub-set to models that seem best described by a 2-component mixture 
         second.screen <- first.screen[which(dicl.list >= 0)]
