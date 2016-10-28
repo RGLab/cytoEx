@@ -17,9 +17,9 @@ set.openCyto.exhaustive <- function(gsid, node, winner, plotEnv, metrics){
   init.openCyto.exhaustive(gsid)
 
   #annotate the winner plot
-  if(!is.null(winner)) {
-    plotEnv[[winner]] <- plotEnv[[winner]] + theme(panel.background = element_rect(fill = "grey50", colour = NA))
-  }
+  # if(!is.null(winner)) {
+    # plotEnv[[winner]] <- plotEnv[[winner]] + theme(panel.background = element_rect(fill = "grey50", colour = NA))
+  # }
 
   ops <- getOption("openCyto")
   ops[["exhaustive"]][[gsid]][[node]] <- list(winner = winner, plotEnv = plotEnv, metrics = metrics)
