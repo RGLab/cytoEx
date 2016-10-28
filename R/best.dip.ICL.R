@@ -50,6 +50,8 @@ best.dip.ICL <- function(fr, debug.mode=FALSE, plotEnv=new.env(parent=emptyenv()
         second.pv[which(potential.channels==first.screen)] <- min(unique(first.p.list))
         selected.channel <- first.screen
         icl.record <- rep(-Inf, length(potential.channels)) #this vector is also for reporting
+        mixtures <- flowClust(fr,varNames=c(first.screen),K=2:3, B=10000, lambda=1, trans=0)
+        plotObjs <- list(ggflowClust.hist(mixtures[[1]], fr))
     }
 
     # finally, if more than one channel passes the intial screen, there are ties. proceed to stage two.
@@ -70,18 +72,24 @@ best.dip.ICL <- function(fr, debug.mode=FALSE, plotEnv=new.env(parent=emptyenv()
             mixtures <- flowClust(fr,varNames=c(CAND),K=2:3, B=10000, lambda=1, trans=0)
             m.icls <- criterion(mixtures,"ICL")
             icl.difference <- m.icls[1]-m.icls[2]
-            
+            if(debug.mode){
+                p <- ggflowClust.hist(mixtures[[1]], fr)
+            }else
+                p <- NULL
+                        
             if (parallel_type == "none") dip.sub <- mean(unlist(lapply(emp,FUN=sub.sample.dip.p)))
             else dip.sub <- mean(unlist(parallel::mclapply(emp,FUN=sub.sample.dip.p)))
-            return(list(dip.sub,icl.difference))
+            return(list(scores=list(dip.sub,icl.difference),plot=p))
         }
 
         #joint list is a flattened list matched to candidate channel in the following way
         #odd index: the mean of a sub-sampled p.value for a given channel
         #odd index + 1: the difference in icl for that channel
-        if (parallel_type == "none") joint.list <- unlist(lapply(first.screen,FUN=get.dip.and.icl))
-        else joint.list <- unlist(parallel::mclapply(first.screen,FUN=get.dip.and.icl, mc.cores = mc.cores))
-
+        if (parallel_type == "none") res <- lapply(first.screen,FUN=get.dip.and.icl)
+        else res <- parallel::mclapply(first.screen,FUN=get.dip.and.icl, mc.cores = mc.cores)
+        joint.list <- unlist(sapply(res, function (x) {unlist(x[["scores"]])}))
+        plotObjs <- sapply(res, function (x) {x[["plot"]]}, simplify = FALSE)
+        
         #record these quanities for metrics, and generate p.list and  mean of sub-sampled p-values
         second.pv <- rep(1, length(potential.channels)) 
         icl.record <- rep(-Inf, length(potential.channels))
@@ -118,6 +126,23 @@ best.dip.ICL <- function(fr, debug.mode=FALSE, plotEnv=new.env(parent=emptyenv()
     #at this point, do not expect numerical ties for p.values because we sub-sampled.
     if (length(selected.channel) > 1) {
         stop("More than one channel selected in best.dip call")
+    }
+    
+    if (debug.mode) {
+        j <- 1
+        for(cn in potential.channels){
+            if (!(cn %in% first.screen)) {
+                mixtures <- flowClust(fr,varNames=c(cn),K=2:3, B=10000, lambda=1, trans=0)
+                p <- ggflowClust.hist(mixtures[[1]], fr) + theme(axis.ticks.y = element_blank(), axis.text.y = element_blank())
+            } else {
+                p <- plotObjs[[j]] + theme(axis.ticks.y = element_blank(), axis.text.y = element_blank())
+                j <- j+1
+            }
+            p <- p + scale_colour_discrete(guide = FALSE) + ylab("")
+            marker <- getChannelMarker(fr, cn)[["desc"]]
+            p <- p + xlab(marker)
+            plotEnv[[cn]] <- p
+        }
     }
 
     #create a vector for reporting compatibility with cytoEx
