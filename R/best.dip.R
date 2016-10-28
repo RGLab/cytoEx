@@ -15,7 +15,7 @@
 #' @param SS.SIZE size of sub-sample taken from channel which passes the initial screen
 #' @return Data table with decision metrics for gating method.
 best.dip <- function(fr, debug.mode=FALSE, plotEnv=new.env(parent=emptyenv()), parallel_type, mc.cores,
-                     ALPHA = 0.01, P.ITERS=10000, SS.SIZE = 200, ...) {
+                     ALPHA = 0.05, P.ITERS=10000, SS.SIZE = 200, ...) {
     potential.channels <- fr@parameters$name
     #apply bonferonni correction
     bonferonni.alpha <- ALPHA/length(potential.channels)
@@ -31,9 +31,12 @@ best.dip <- function(fr, debug.mode=FALSE, plotEnv=new.env(parent=emptyenv()), p
     }
     
     #channels which pass the first screen have p values below the bonferonni-adjusted significance level.
-    first.screen <- potential.channels[intersect(which(first.p.list == min(unique(first.p.list))),which(first.p.list < bonferonni.alpha))]
+    #first.screen <- potential.channels[intersect(which(first.p.list == min(unique(first.p.list))),which(first.p.list < bonferonni.alpha))]
+    first.screen <- potential.channels[which(first.p.list < bonferonni.alpha)]
     
     # if no channels pass the intial screening, return a table with  all scores set to -1
+
+
     if (length(first.screen) == 0) {
         return.table <- data.table(channel=potential.channels,score=-1,area.ratio=0,intial.p.values = first.p.list, second.p.values = 1, b.alpha = bonferonni.alpha)
         return(return.table)

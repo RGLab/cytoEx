@@ -18,7 +18,7 @@
 #' @param SS.SIZE size of sub-sample taken from channel which passes the initial screen
 #' @return Data table with decision metrics for gating method.
 best.dip.ICL <- function(fr, debug.mode=FALSE, plotEnv=new.env(parent=emptyenv()), parallel_type, mc.cores,
-                         ALPHA = 0.01, P.ITERS=10000, SS.SIZE = 200, ...) {
+                         ALPHA = 0.05, P.ITERS=10000, SS.SIZE = 200, ...) {
 
     potential.channels <- fr@parameters$name
     #apply bonferonni correction
@@ -35,7 +35,19 @@ best.dip.ICL <- function(fr, debug.mode=FALSE, plotEnv=new.env(parent=emptyenv()
     }
 
     #channels which pass the first screen have p values below the bonferonni-adjusted significance level.
-    first.screen <- potential.channels[intersect(which(first.p.list == min(unique(first.p.list))),which(first.p.list < bonferonni.alpha))]
+    #first.screen <- potential.channels[intersect(which(first.p.list == min(unique(first.p.list))),which(first.p.list < bonferonni.alpha))]
+    first.screen <- potential.channels[which(first.p.list < bonferonni.alpha)]
+    first.remainders <- setdiff(potential.channels,first.screen)
+
+    #record ranks for reporting/visualization
+    scores <- rep((length(potential.channels)+1),length(potential.channels))
+    CURRENT.CHANNEL.RANK <- length(potential.channels)
+    for (chn in potential.channels) {
+        if (chn %in% first.remainders) {
+            scores[which(potential.channels==chn)] <- CURRENT.CHANNEL.RANK
+            CURRENT.CHANNEL.RANK <- CURRENT.CHANNEL.RANK -1
+        }
+    }
 
     # if no channels pass the intial screening, return a table with  all scores set to -1
     if (length(first.screen) == 0) {
@@ -118,11 +130,29 @@ best.dip.ICL <- function(fr, debug.mode=FALSE, plotEnv=new.env(parent=emptyenv()
             }
         }
 
+        #update rank vector
+        second.remainders <- setdiff(first.screen,second.screen)
+        for (chn in potential.channels) {
+            if (chn %in% second.remainders) {
+                scores[which(potential.channels==chn)] <- CURRENT.CHANNEL.RANK
+                CURRENT.CHANNEL.RANK <- CURRENT.CHANNEL.RANK -1
+            }
+        }
+                
         #get remaining channels difference of icls
         dicl.sub <- dicl.list[which(p.list <= thresh.p)]
 
         #pick channel with largest difference (indicating we prefer it)
         selected.channel <- second.screen[which(dicl.sub == max(unique(dicl.sub)))]
+
+        #final ranks
+        repdf <- data.frame(channels=second.screen,scores=dicl.sub)
+        repdf <- repdf[order(repdf$scores,decreasing=TRUE),]
+        for (chn in repdf$channels) {
+            scores[which(potential.channels==chn)] <- CURRENT.CHANNEL.RANK
+            CURRENT.CHANNEL.RANK <- CURRENT.CHANNEL.RANK -1
+        }
+
     }
 
     #at this point, do not expect numerical ties for p.values because we sub-sampled.
@@ -148,7 +178,6 @@ best.dip.ICL <- function(fr, debug.mode=FALSE, plotEnv=new.env(parent=emptyenv()
     }
 
     #create a vector for reporting compatibility with cytoEx
-    scores <- rep(-1, length(potential.channels))
     scores[which(potential.channels==selected.channel)] <- 1
     areas <- rep(0, length(potential.channels))
     areas[which(potential.channels==selected.channel)] <- 1
