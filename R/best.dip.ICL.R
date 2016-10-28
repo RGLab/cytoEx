@@ -1,23 +1,22 @@
 #' determine the best channel according to a two-stage process, described below
-#' 
+#'
 #' STEP 1: is the same as best.dip.R
-#' 
+#'
 #' STEP 2: If a unique minimum p-value exists, select the corresponding channel.
 #'         Otherwise, sub-sample from each channel and create distribution of p-values for each candidate channel (they tied).
 #'         Compute mean of each sub-sample.
-#'         Initially, consider only channels with sub-sampled means below threshold := 0.05 
+#'         Initially, consider only channels with sub-sampled means below threshold := 0.05
 #'         If no channels meet this criteria, increment the threshold by 0.01 until at least one channel is in contention.
 #'         If a unique channel falls below the threshold, pick it.
 #'         If multiple channels fall below the threshold, pick model with maximum difference in ICL, where the difference is:
 #'            (ICL from mixture with two components) - (ICL from mixture with three components).
 #' @importFrom diptest dip.test
-#' @importFrom flowClust flowClust
+#' @importFrom flowClust flowClust criterion
 #' @importFrom parallel mclapply
 #' @param ALPHA user selected significance level for channel-wide dip statistic. bonferonni correction applied to this value.
 #' @param P.ITERS number of sub-samples taken from channels which pass initial screen
 #' @param SS.SIZE size of sub-sample taken from channel which passes the initial screen
 #' @return Data table with decision metrics for gating method.
-
 best.dip.ICL <- function(fr, debug.mode=FALSE, plotEnv=new.env(parent=emptyenv()), parallel_type, mc.cores,
                          ALPHA = 0.01, P.ITERS=10000, SS.SIZE = 200, ...) {
 
@@ -34,10 +33,10 @@ best.dip.ICL <- function(fr, debug.mode=FALSE, plotEnv=new.env(parent=emptyenv()
         #suppress warnings because can have greater than 70000 observations
         first.p.list <- append(first.p.list,suppressMessages(dip.test(cyto.data[,which(colnames(cyto.data) == candidate)]))$p.value)
     }
-    
+
     #channels which pass the first screen have p values below the bonferonni-adjusted significance level.
     first.screen <- potential.channels[intersect(which(first.p.list == min(unique(first.p.list))),which(first.p.list < bonferonni.alpha))]
-    
+
     # if no channels pass the intial screening, return a table with  all scores set to -1
     if (length(first.screen) == 0) {
         return.table <- data.table(channel=potential.channels,score=-1,area.ratio=0,intial.p.values = first.p.list, second.p.values = 1, icl.record = -Inf, b.alpha = bonferonni.alpha)
@@ -59,7 +58,7 @@ best.dip.ICL <- function(fr, debug.mode=FALSE, plotEnv=new.env(parent=emptyenv()
         get.dip.and.icl <- function(CAND) {
             cand.data <- cyto.data[,which(colnames(cyto.data) == CAND)]
             emp <- rep(NA,P.ITERS)
-            
+
             sub.sample.dip.p <- function(x) {
                 NEGATIVES <- TRUE
                 while (NEGATIVES) {
@@ -68,7 +67,7 @@ best.dip.ICL <- function(fr, debug.mode=FALSE, plotEnv=new.env(parent=emptyenv()
                 }
                 return(suppressMessages(diptest::dip.test(sub.s))$p.value)
             }
-            
+
             mixtures <- flowClust(fr,varNames=c(CAND),K=2:3, B=10000, lambda=1, trans=0)
             m.icls <- criterion(mixtures,"ICL")
             icl.difference <- m.icls[1]-m.icls[2]
@@ -76,7 +75,7 @@ best.dip.ICL <- function(fr, debug.mode=FALSE, plotEnv=new.env(parent=emptyenv()
                 p <- ggflowClust.hist(mixtures[[1]], fr)
             }else
                 p <- NULL
-                        
+
             if (parallel_type == "none") dip.sub <- mean(unlist(lapply(emp,FUN=sub.sample.dip.p)))
             else dip.sub <- mean(unlist(parallel::mclapply(emp,FUN=sub.sample.dip.p)))
             return(list(scores=list(dip.sub,icl.difference),plot=p))
@@ -89,9 +88,9 @@ best.dip.ICL <- function(fr, debug.mode=FALSE, plotEnv=new.env(parent=emptyenv()
         else res <- parallel::mclapply(first.screen,FUN=get.dip.and.icl, mc.cores = mc.cores)
         joint.list <- unlist(sapply(res, function (x) {unlist(x[["scores"]])}))
         plotObjs <- sapply(res, function (x) {x[["plot"]]}, simplify = FALSE)
-        
+
         #record these quanities for metrics, and generate p.list and  mean of sub-sampled p-values
-        second.pv <- rep(1, length(potential.channels)) 
+        second.pv <- rep(1, length(potential.channels))
         icl.record <- rep(-Inf, length(potential.channels))
         dicl.list <- p.list <- c()
         i <- 1
@@ -115,19 +114,19 @@ best.dip.ICL <- function(fr, debug.mode=FALSE, plotEnv=new.env(parent=emptyenv()
                 NULL.SCREEN <- FALSE
             }
         }
-        
+
         #get remaining channels difference of icls
         dicl.sub <- dicl.list[which(p.list <= thresh.p)]
-        
+
         #pick channel with largest difference (indicating we prefer it)
         selected.channel <- second.screen[which(dicl.sub == max(unique(dicl.sub)))]
     }
-    
+
     #at this point, do not expect numerical ties for p.values because we sub-sampled.
     if (length(selected.channel) > 1) {
         stop("More than one channel selected in best.dip call")
     }
-    
+
     if (debug.mode) {
         j <- 1
         for(cn in potential.channels){
