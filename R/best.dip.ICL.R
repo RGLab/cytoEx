@@ -68,7 +68,10 @@ best.dip.ICL <- function(fr, debug.mode=FALSE, plotEnv=new.env(parent=emptyenv()
                 return(suppressMessages(diptest::dip.test(sub.s))$p.value)
             }
 
-            mixtures <- flowClust(fr,varNames=c(CAND),K=2:3, B=10000, lambda=1, trans=0)
+            mixtures <- flowClust(fr,varNames=c(CAND),K=2:3
+                                  # , B=10000
+                                  , lambda=1
+                                  , trans = 0, min.count = -1, max.count = -1, randomStart = 0)
             m.icls <- criterion(mixtures,"ICL")
             icl.difference <- m.icls[1]-m.icls[2]
             if(debug.mode){
