@@ -138,7 +138,7 @@ best.dip.ICL <- function(fr, debug.mode=FALSE, plotEnv=new.env(parent=emptyenv()
                 CURRENT.CHANNEL.RANK <- CURRENT.CHANNEL.RANK -1
             }
         }
-                
+
         #get remaining channels difference of icls
         dicl.sub <- dicl.list[which(p.list <= thresh.p)]
 
@@ -182,7 +182,7 @@ best.dip.ICL <- function(fr, debug.mode=FALSE, plotEnv=new.env(parent=emptyenv()
     areas <- rep(0, length(potential.channels))
     areas[which(potential.channels==selected.channel)] <- 1
     return.table <- data.table(channel=potential.channels,
-                               score=scores,
+                               score=rev(scores),
                                area.ratio=areas,
                                intial.p.values = first.p.list,
                                second.p.values=second.pv,
