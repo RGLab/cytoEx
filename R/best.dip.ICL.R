@@ -40,18 +40,19 @@ best.dip.ICL <- function(fr, debug.mode=FALSE, plotEnv=new.env(parent=emptyenv()
     first.remainders <- setdiff(potential.channels,first.screen)
 
     #record ranks for reporting/visualization
-    scores <- rep((length(potential.channels)+1),length(potential.channels))
-    CURRENT.CHANNEL.RANK <- length(potential.channels)
+    #scores <- rep((length(potential.channels)+1),length(potential.channels))
+    scores <- rep(0,length(potential.channels))
+    CURRENT.CHANNEL.RANK <- 1
     for (chn in potential.channels) {
         if (chn %in% first.remainders) {
             scores[which(potential.channels==chn)] <- CURRENT.CHANNEL.RANK
-            CURRENT.CHANNEL.RANK <- CURRENT.CHANNEL.RANK -1
+            CURRENT.CHANNEL.RANK <- CURRENT.CHANNEL.RANK + 1
         }
     }
 
     # if no channels pass the intial screening, return a table with  all scores set to -1
     if (length(first.screen) == 0) {
-        return.table <- data.table(channel=potential.channels,score=-1,area.ratio=0,intial.p.values = first.p.list, second.p.values = 1, icl.record = -Inf, b.alpha = bonferonni.alpha)
+        return.table <- data.table(channel=potential.channels,score=-1,area.ratio=0,intial.p.values = first.p.list, second.p.values = 1, diff.icl = -Inf, b.alpha = bonferonni.alpha)
         return(return.table)
     }
 
@@ -135,7 +136,7 @@ best.dip.ICL <- function(fr, debug.mode=FALSE, plotEnv=new.env(parent=emptyenv()
         for (chn in potential.channels) {
             if (chn %in% second.remainders) {
                 scores[which(potential.channels==chn)] <- CURRENT.CHANNEL.RANK
-                CURRENT.CHANNEL.RANK <- CURRENT.CHANNEL.RANK -1
+                CURRENT.CHANNEL.RANK <- CURRENT.CHANNEL.RANK + 1
             }
         }
 
@@ -147,10 +148,11 @@ best.dip.ICL <- function(fr, debug.mode=FALSE, plotEnv=new.env(parent=emptyenv()
 
         #final ranks
         repdf <- data.frame(channels=second.screen,scores=dicl.sub)
-        repdf <- repdf[order(repdf$scores,decreasing=TRUE),]
+                                        #repdf <- repdf[order(repdf$scores,decreasing=TRUE),]
+        repdf <- repdf[order(repdf$scores),]
         for (chn in repdf$channels) {
             scores[which(potential.channels==chn)] <- CURRENT.CHANNEL.RANK
-            CURRENT.CHANNEL.RANK <- CURRENT.CHANNEL.RANK -1
+            CURRENT.CHANNEL.RANK <- CURRENT.CHANNEL.RANK + 1
         }
 
     }
@@ -178,11 +180,11 @@ best.dip.ICL <- function(fr, debug.mode=FALSE, plotEnv=new.env(parent=emptyenv()
     }
 
     #create a vector for reporting compatibility with cytoEx
-    scores[which(potential.channels==selected.channel)] <- 1
+    scores[which(potential.channels==selected.channel)] <- length(potential.channels)
     areas <- rep(0, length(potential.channels))
     areas[which(potential.channels==selected.channel)] <- 1
     return.table <- data.table(channel=potential.channels,
-                               score=rev(scores),
+                               score=scores,
                                area.ratio=areas,
                                intial.p.values = first.p.list,
                                second.p.values=second.pv,
