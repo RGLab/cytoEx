@@ -15,7 +15,7 @@ Imports:
     ncdfFlow,
     ggcyto (>= 1.1.12),
     ggplot2,
-    diptest
+    diptest (>= 1.75-7)
 RoxygenNote: 5.0.1
 Collate:
     'best.ICL.R'
