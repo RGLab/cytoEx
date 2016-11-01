@@ -5,3 +5,10 @@ getLeafNode <- function(gs, ...){
   })
   nodes[isTerminal]
 }
+
+getfluorescentChannels <- function(fr){
+
+  pd <- pData(parameters(fr))
+  pd <- pd[!is.na(pd[["desc"]]),]
+  pd[["name"]]
+}

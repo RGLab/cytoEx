@@ -72,9 +72,7 @@ gating.subnode <- function(parent, gs
     #for now we use the first sample
     fr <- fs[[1, use.exprs = FALSE]]
     #exclude the non-stained channels
-    pd <- pData(parameters(fr))
-    pd <- pd[!is.na(pd[["desc"]]),]
-    channels <- pd[["name"]]
+    channels <- getfluorescentChannels(fr)
     fr <- fs[[1,channels]]
 
     nCell <- nrow(fr)
