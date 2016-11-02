@@ -1,4 +1,4 @@
-test_that("Test best.dip singlet selection unchanged: ", {
+test_that("Test best.dip.ICL across several data sets. ", {
     set.seed(1239214)
     
     #

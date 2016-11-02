@@ -1,6 +1,5 @@
-test_that("Test best.dip singlet selection unchanged: ", {
+test_that("Test best.dip across several data sets. ", {
     set.seed(172384)
-
 
     res <- best.dip(fr.singlet,parallel_type="multicore",mc.cores=4)
 

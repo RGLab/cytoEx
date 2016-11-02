@@ -32,7 +32,7 @@ best.dip.ICL <- function(fr, debug.mode=FALSE, plotEnv=new.env(parent=emptyenv()
     first.p.list <- c()
     for (candidate in potential.channels) {
         #suppress warnings because can have greater than 70000 observations
-        first.p.list <- append(first.p.list,suppressMessages(dip.test(cyto.data[,which(colnames(cyto.data) == candidate)], qDiptab = qDiptab))$p.value)
+        first.p.list <- append(first.p.list,suppressMessages(diptest::dip.test(cyto.data[,which(colnames(cyto.data) == candidate)], qDiptab = qDiptab))$p.value)
     }
 
     #channels which pass the first screen have p values below the bonferonni-adjusted significance level.

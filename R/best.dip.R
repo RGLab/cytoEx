@@ -16,6 +16,9 @@
 #' @return Data table with decision metrics for gating method.
 best.dip <- function(fr, debug.mode=FALSE, plotEnv=new.env(parent=emptyenv()), parallel_type, mc.cores,
                      ALPHA = 0.05, P.ITERS=10000, SS.SIZE = 200, ...) {
+
+    qDiptab <- diptest:::rdRDS("extraData", "qDiptab.rds")
+
     potential.channels <- fr@parameters$name
     #apply bonferonni correction
     bonferonni.alpha <- ALPHA/length(potential.channels)
@@ -27,7 +30,7 @@ best.dip <- function(fr, debug.mode=FALSE, plotEnv=new.env(parent=emptyenv()), p
     first.p.list <- c()
     for (candidate in potential.channels) {
         #suppress warnings because can have greater than 70000 observations
-        first.p.list <- append(first.p.list,suppressMessages(diptest::dip.test(cyto.data[,which(colnames(cyto.data) == candidate)]))$p.value)
+        first.p.list <- append(first.p.list,suppressMessages(diptest::dip.test(cyto.data[,which(colnames(cyto.data) == candidate)], qDiptab = qDiptab))$p.value)
     }
     
     #channels which pass the first screen have p values below the bonferonni-adjusted significance level.
@@ -62,7 +65,7 @@ best.dip <- function(fr, debug.mode=FALSE, plotEnv=new.env(parent=emptyenv()), p
                     sub.s <- sample(cand.data,size=SS.SIZE,replace=FALSE)
                     if (min(sub.s) > 0) NEGATIVES <- FALSE
                 }
-                return(suppressMessages(diptest::dip.test(sub.s))$p.value)
+                return(suppressMessages(diptest::dip.test(sub.s, qDiptab = qDiptab))$p.value)
             }
             if (parallel_type == "none") return(mean(unlist(lapply(emp,FUN=sub.sample.dip.p))))
             else return(mean(unlist(parallel::mclapply(emp,FUN=sub.sample.dip.p))))
