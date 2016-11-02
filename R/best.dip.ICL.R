@@ -19,6 +19,7 @@
 #' @return Data table with decision metrics for gating method.
 best.dip.ICL <- function(fr, debug.mode=FALSE, plotEnv=new.env(parent=emptyenv()), parallel_type, mc.cores,
                          ALPHA = 0.05, P.ITERS=10000, SS.SIZE = 200, ...) {
+    qDiptab <- diptest:::rdRDS("extraData", "qDiptab.rds")
 
     potential.channels <- fr@parameters$name
     #apply bonferonni correction
@@ -31,7 +32,7 @@ best.dip.ICL <- function(fr, debug.mode=FALSE, plotEnv=new.env(parent=emptyenv()
     first.p.list <- c()
     for (candidate in potential.channels) {
         #suppress warnings because can have greater than 70000 observations
-        first.p.list <- append(first.p.list,suppressMessages(dip.test(cyto.data[,which(colnames(cyto.data) == candidate)]))$p.value)
+        first.p.list <- append(first.p.list,suppressMessages(dip.test(cyto.data[,which(colnames(cyto.data) == candidate)], qDiptab = qDiptab))$p.value)
     }
 
     #channels which pass the first screen have p values below the bonferonni-adjusted significance level.
@@ -78,7 +79,7 @@ best.dip.ICL <- function(fr, debug.mode=FALSE, plotEnv=new.env(parent=emptyenv()
                     sub.s <- sample(cand.data,size=SS.SIZE,replace=TRUE)
                     if (min(sub.s) > 0) NEGATIVES <- FALSE
                 }
-                return(suppressMessages(diptest::dip.test(sub.s))$p.value)
+                return(suppressMessages(diptest::dip.test(sub.s, qDiptab = qDiptab))$p.value)
             }
 
             mixtures <- flowClust(fr,varNames=c(CAND),K=2:3
