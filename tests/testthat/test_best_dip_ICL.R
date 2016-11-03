@@ -1,26 +1,24 @@
-test_that("Test best.dip.ICL across several data sets. ", {
-    set.seed(1239214)
-    
-    #
-    #tests for singlets
-    #
+context("Test best.dip.ICL across several data sets")
 
-    res <- best.dip.ICL(fr.singlet,parallel_type="multicore",mc.cores=4)
+test_that("tcell -- singlets ", {
+    set.seed(1239214)
+
+    res <- best.dip.ICL(fr.singlet,parallel_type=parallel_type, mc.cores=mc.cores,  P.ITERS = P.ITERS)
 
     #this data set should have two channels with non-zero p-value for dip-statistic
     expect_true(all(res[c(2,6),intial.p.values] > 4.5e-3))
     expect_equal(sum(res[,"intial.p.values",with=FALSE] > 0),2)
-   
+
     #the initial p-value of the dip statistic for two channels should not change with seed set.
     expect_equal(round(res[channel=="<R660-A>",intial.p.values],3), 0.005)
     expect_equal(round(res[channel=="<G560-A>",intial.p.values],3), 1.000)
-    
+
     #this method should select "<V450-A>"
     expect_true(res[channel=="<V450-A>", area.ratio] == 1)
 
     #the method should then reject all other channels (set to zero)
     expect_equal(res[!(channel=="<V450-A>"), area.ratio],c(0,0,0,0,0,0))
-    
+
     #it passes over <B710-A> because of negative difference in ICL between 2 and 3 mode
     expect_true(res[channel=="<B710-A>", diff.icl] < 0)
 
@@ -40,27 +38,26 @@ test_that("Test best.dip.ICL across several data sets. ", {
     expect_equal(max(round(res[,"b.alpha",with=FALSE],3)),0.007)
     expect_equal(min(round(res[,"b.alpha",with=FALSE],3)),0.007)
 
+})
 
-    #
-    #tests for singlets/CD3+
-    #
+test_that("tcell -- singlets/CD3+", {
 
-    res.cd3 <- best.dip.ICL(fr.cd3,parallel_type="multicore",mc.cores=4)
+    res.cd3 <- best.dip.ICL(fr.cd3,parallel_type=parallel_type, mc.cores=mc.cores,  P.ITERS = P.ITERS)
 
     #results should have four channels with non-zero p-value for dip-statistic
     expect_true(all(res.cd3[c(2,4,5,6),intial.p.values] > 0.01))
     expect_equal(sum(res.cd3[,"intial.p.values",with=FALSE] > 0),4)
-   
+
     #the initial p-value of the dip statistic for two channels should not change with seed set.
     expect_equal(round(res.cd3[channel %in% c("<R660-A>","<V450-A>","<V545-A>","<G560-A>"),intial.p.values],3),
                  c(1.000,1.000,1.000,0.738))
-    
+
     #method should select "<B710-A>"
     expect_true(res.cd3[channel=="<B710-A>", area.ratio] == 1)
 
     #the method should then reject all other channels (set to zero)
     expect_equal(res.cd3[!(channel=="<B710-A>"), area.ratio],c(0,0,0,0,0,0))
-    
+
 
     #it shouldn't compute difference in ICL for the following
     expect_true(max(res.cd3[channel %in% c("<R660-A>","<V450-A>","<V545-A>","<G560-A>"), diff.icl]) == -Inf)
@@ -69,7 +66,7 @@ test_that("Test best.dip.ICL across several data sets. ", {
     expect_equal(min(sapply(res.cd3[!(channel %in% c("<R660-A>","<V450-A>","<V545-A>","<G560-A>")),diff.icl],
                             is.finite)),1)
 
-    
+
     #it ranks seven channels
     expect_equal(res.cd3[, score], c(7,1,6,2,3,4,5))
 
@@ -79,17 +76,16 @@ test_that("Test best.dip.ICL across several data sets. ", {
     #the significance level (with bonferonni correction) shouldn't change
     expect_equal(max(round(res.cd3[,"b.alpha",with=FALSE],3)),0.007)
     expect_equal(min(round(res.cd3[,"b.alpha",with=FALSE],3)),0.007)
+})
 
-    #
-    #tests for singlets/CD3+/CD8
-    #
+test_that("tcell -- CD3+/CD8", {
 
-    res.cd8 <- best.dip.ICL(fr.cd8,parallel_type="multicore",mc.cores=4)
+    res.cd8 <- best.dip.ICL(fr.cd8,parallel_type=parallel_type, mc.cores=mc.cores,  P.ITERS = P.ITERS)
 
     #results should have five channels with non-zero p-value for dip-statistic
     expect_true(all(res.cd8[c(1,2,3,4,5),intial.p.values] > 0.1))
     expect_equal(sum(res.cd8[,"intial.p.values",with=FALSE] > 0),5)
-   
+
     #the initial p-value of the dip statistic for five channels should not change with seed set.
     expect_equal(round(res.cd8[channel %in% c("<B710-A>","<R660-A>","<R780-A>","<V450-A>","<V545-A>"),intial.p.values],3),
                  c(0.995,0.998,1.000,1.000,0.996))
@@ -97,19 +93,19 @@ test_that("Test best.dip.ICL across several data sets. ", {
 
     #Shouldn't compute ICL for any of these
     expect_true(max(res.cd8[channel %in% c("<B710-A>","<R660-A>","<R780-A>","<V450-A>","<V545-A>"),diff.icl]) == -Inf)
-    
+
     #difference in icl should be computed for the rest
     expect_equal(min(sapply(res.cd8[!(channel %in% c("<B710-A>","<R660-A>","<R780-A>","<V450-A>","<V545-A>")),diff.icl],
                             is.finite)),1)
 
-    
-    
+
+
     #method should select "<G560-A>"
     expect_true(res.cd8[channel=="<G560-A>", area.ratio] == 1)
 
     #the method should then reject all other channels (set to zero)
     expect_equal(res.cd8[!(channel=="<G560-A>"), area.ratio],c(0,0,0,0,0,0))
-    
+
 
     #it ranks seven channels
     expect_equal(res.cd8[, score], c(1,2,3,4,5,7,6))
@@ -122,13 +118,12 @@ test_that("Test best.dip.ICL across several data sets. ", {
     #once again, the significance level (with bonferonni correction) shouldn't change
     expect_equal(max(round(res.cd8[,"b.alpha",with=FALSE],3)),0.007)
     expect_equal(min(round(res.cd8[,"b.alpha",with=FALSE],3)),0.007)
-    
-    
-    #
-    #tests for DC::Monocytes/Live
-    #
 
-    res.dc.mon <- best.dip.ICL(fr.dc.mon,parallel_type="multicore",mc.cores=4)
+})
+
+test_that("DC -- Monocytes/Live", {
+
+    res.dc.mon <- best.dip.ICL(fr.dc.mon,parallel_type=parallel_type, mc.cores=mc.cores,  P.ITERS = P.ITERS)
 
     #it ranks eight channels
     expect_equal(res.dc.mon[, score], c(3,4,1,7,2,5,8,6))
@@ -147,7 +142,7 @@ test_that("Test best.dip.ICL across several data sets. ", {
 
     #difference in icl should be computed for the rest
     expect_equal(min(sapply(res.dc.mon[!(channel %in% c("CD123","CD16")),diff.icl],is.finite)),1)
-    
+
     #CD56 and Lineage should have large second.p.values
     #since the exact value will change if set.seed is not invoked, perform an approximate check.
     expect_true(res.dc.mon[channel=="CD56",second.p.values] > 0.25)
@@ -157,12 +152,11 @@ test_that("Test best.dip.ICL across several data sets. ", {
     #significance level should be the same for all rows
     expect_equal(max(round(res.dc.mon[,"b.alpha",with=FALSE],3)),0.006)
     expect_equal(min(round(res.dc.mon[,"b.alpha",with=FALSE],3)),0.006)
+})
 
+test_that("bcell -- Live", {
 
-    #
-    #tests for bcell Live
-    #
-    res.bcell <- best.dip.ICL(fr.bcell,parallel_type="multicore",mc.cores=4)
+    res.bcell <- best.dip.ICL(fr.bcell,parallel_type=parallel_type, mc.cores=mc.cores,  P.ITERS = P.ITERS)
 
     #it ranks eight channels
     expect_equal(res.bcell[, score], c(1,7,8,6,2,5,3,4))
@@ -172,7 +166,7 @@ test_that("Test best.dip.ICL across several data sets. ", {
 
     #the method should then reject all other channels (set to zero)
     expect_equal(res.bcell[!(channel=="CD19"), area.ratio],c(0,0,0,0,0,0,0))
-        
+
     #the initial p-value of the dip statistic for Live channel should not change across tests
     expect_equal(round(res.bcell[channel == "Live",intial.p.values],3),c(0.998))
 
@@ -184,7 +178,7 @@ test_that("Test best.dip.ICL across several data sets. ", {
 
     #difference in icl should be negative for IgD
     expect_true(res.bcell[channel == "IgD",diff.icl]<0)
-    
+
 
     #significance level should be the same for all rows
     expect_equal(max(round(res.bcell[,"b.alpha",with=FALSE],3)),0.006)
