@@ -10,7 +10,7 @@ STEP 1: for each channel, compute p-values for Hartigan's dip statistic (with bo
        Else, proceed to step 2.}
 \usage{
 best.dip(fr, debug.mode = FALSE, plotEnv = new.env(parent = emptyenv()),
-  parallel_type, mc.cores, ALPHA = 0.01, P.ITERS = 10000, SS.SIZE = 200,
+  parallel_type, mc.cores, ALPHA = 0.05, P.ITERS = 10000, SS.SIZE = 200,
   ...)
 }
 \arguments{

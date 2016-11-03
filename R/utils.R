@@ -6,6 +6,7 @@ getLeafNode <- function(gs, ...){
   nodes[isTerminal]
 }
 
+#' @import flowCore
 getfluorescentChannels <- function(fr){
 
   pd <- pData(parameters(fr))

@@ -5,7 +5,7 @@
 \title{determine the best channel according to a two-stage process, described below}
 \usage{
 best.dip.ICL(fr, debug.mode = FALSE, plotEnv = new.env(parent = emptyenv()),
-  parallel_type, mc.cores, ALPHA = 0.01, P.ITERS = 10000, SS.SIZE = 200,
+  parallel_type, mc.cores, ALPHA = 0.05, P.ITERS = 10000, SS.SIZE = 200,
   ...)
 }
 \arguments{

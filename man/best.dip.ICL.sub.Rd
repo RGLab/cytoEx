@@ -7,7 +7,7 @@
 STEP 1: is the same as best.dip.R}
 \usage{
 best.dip.ICL.sub(fr, debug.mode = FALSE, plotEnv = new.env(parent =
-  emptyenv()), parallel_type, mc.cores, ALPHA = 0.01, P.ITERS = 10000,
+  emptyenv()), parallel_type, mc.cores, ALPHA = 0.05, P.ITERS = 10000,
   SS.SIZE = 200, ...)
 }
 \arguments{
