@@ -9,7 +9,8 @@
 \S4method{gating}{GatingSet,missing}(x, y, ...)
 
 gating.subnode(parent, gs, gating.function = mindensity,
-  marker.selection = best.separation, min.count = 1000, min.percent = 0.2,
+  marker.selection.function = best.separation,
+  marker.selection.args = list(), min.count = 1000, min.percent = 0.2,
   debug.mode = FALSE, max.depth = -1, mc.cores = getOption("mc.cores",
   2L), parallel_type = c("multicore", "cluster", "none"), cl = NULL, ...)
 }
@@ -22,7 +23,9 @@ gating.subnode(parent, gs, gating.function = mindensity,
 
 \item{gating.function}{the 1d gating function used for exhaustive gating}
 
-\item{marker.selection}{a function that selectes the best marker that has the best bi-module separation based on the various peak statistics (e.g. peak area ratio, peak distance, peak/valley ratio, etc...)}
+\item{marker.selection.function}{a function that selectes the best marker that has the best bi-module separation based on the various peak statistics (e.g. peak area ratio, peak distance, peak/valley ratio, etc...)}
+
+\item{marker.selection.args}{a list of arguments passed to \code{marker.selection.function}}
 
 \item{min.count}{the minimum number of cells that allows the gating proceed further}
 

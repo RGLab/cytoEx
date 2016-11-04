@@ -46,7 +46,8 @@ openCyto::gating("singlets", gs2
        # , parallel_type = "none"
        , mc.cores = 10
        , gating.function = openCyto::mindensity
-       , marker.selection = best.dip.ICL
+       , marker.selection.function = best.dip.ICL
+       , marker.selection.args = list(P.ITERS=100)
        )
 ```
 

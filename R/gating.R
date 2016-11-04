@@ -48,14 +48,16 @@ setMethod("gating", signature = c("character", "GatingSet"),
           })
 
 #' @rdname gating
-#' @param marker.selection a function that selectes the best marker that has the best bi-module separation based on the various peak statistics (e.g. peak area ratio, peak distance, peak/valley ratio, etc...)
+#' @param marker.selection.function a function that selectes the best marker that has the best bi-module separation based on the various peak statistics (e.g. peak area ratio, peak distance, peak/valley ratio, etc...)
+#' @param marker.selection.args a list of arguments passed to \code{marker.selection.function}
 #' @param gating.function the 1d gating function used for exhaustive gating
 #' @param min.count the minimum number of cells that allows the gating proceed further
 #' @param max.depth the maximum depths of gating path. Default is -1, which is no limits.
 #' @param ... other arguments passed to \link{density} function.
 gating.subnode <- function(parent, gs
                            , gating.function = mindensity
-                           , marker.selection = best.separation
+                           , marker.selection.function = best.separation
+                           , marker.selection.args = list()
                            , min.count = 1000, min.percent = 0.2
                            , debug.mode = FALSE, max.depth = -1
                            , mc.cores = getOption("mc.cores", 2L)
@@ -97,9 +99,12 @@ gating.subnode <- function(parent, gs
         message("parent: ", parent)
         #get measurements for the cutpoints
         plotEnv <- new.env(parent = emptyenv())
-        metrics <- marker.selection(fr[,channels], debug.mode = debug.mode, plotEnv = plotEnv
+        thisCall <- quote(marker.selection.function(fr[,channels], debug.mode = debug.mode, plotEnv = plotEnv
                                     , mc.cores = mc.cores
                                     , parallel_type = parallel_type)
+                          )
+        thisCall <- as.call(c(as.list(thisCall), marker.selection.args))
+        metrics <- eval(thisCall)
         # add marker column for the purpose of visualization
         metrics[, marker := getChannelMarker(fr, channel)[["desc"]], by = channel]
         metrics.thresholded <- metrics[area.ratio >= min.percent, ]
@@ -132,7 +137,8 @@ gating.subnode <- function(parent, gs
             #resursively gate the sub nodes
             gating(node.path, gs
                    , gating.function = gating.function
-                   , marker.selection = marker.selection
+                   , marker.selection.function = marker.selection.function
+                   , marker.selection.args = marker.selection.args
                    , min.count = min.count
                    , min.percent = min.percent
                    , debug.mode = debug.mode
