@@ -80,18 +80,10 @@ gating.subnode <- function(parent, gs
     nCell <- nrow(fr)
     if(nCell > min.count){#TODO: use options("openCyto")[[1]][["gating"]][["minEvents"]]
 
-      #check if the markers have already been gated to
-      #avoid gating on the same marker repeately on the same path
+      #check if the marker has already been gated to avoid gating on the same marker repeately on the same path
       is.gated <- sapply(channels, function(channel){
         marker <- getChannelMarker(fr, channel)[, "desc"]
-        gated.markers <- strsplit(parent, split = "/")[[1]]
-        gated.markers <- gated.markers[-1] #rm the first empty string
-        matched <- sapply(gated.markers, function(i){
-          i <- sub("[\\+\\-]$", "", i)
-          grepl(i, marker)
-        })
-        any(matched)
-
+        isGated(marker, parent)
       })
       channels <- channels[!is.gated]
 
@@ -122,9 +114,8 @@ gating.subnode <- function(parent, gs
           }
 
         if(!is.null(chnl.selected)){
-
           #clean the marker name(sometime it is in the form of 'antigen isotypecontrol',e.g 'CD38 APC')
-          marker <- strsplit(marker, " ")[[1]][[1]]
+          marker <- cleanMarker(marker)
           message("selected marker: ", marker)
           #add the gates and move on the children of the new node
           for(sub in c("+", "-")){
