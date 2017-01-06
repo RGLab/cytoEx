@@ -11,10 +11,10 @@ test_that("bcell ", {
                    , min.count = 2000
                    , min.percent = min.percent
                    , debug.mode = T
-                   , parallel_type=parallel_type, mc.cores=mc.cores,  P.ITERS = P.ITERS
+                   , parallel_type=parallel_type, mc.cores=mc.cores
                    , gating.function = openCyto::mindensity
                    , marker.selection.function = best.dip.ICL
-                   , marker.selection.args = list(P.ITERS=100)
+                   , marker.selection.args = list(P.ITERS=P.ITERS)
   )
 
   expect_true(setequal(getNodes(gs2)[-(1:3)], c('/boundary/nonDebris/lymph/CD19+'

@@ -31,8 +31,9 @@ ggflowClust.hist <- function(x, data=NULL, subset=1, include=1:(x@K)
     j <- 0
     # for (k in include){
       this.x <- pre.obj$data
-      this.y <- pre.obj$ymin - (pre.obj$ylim[2]-pre.obj$ymin)/100*(j<-j+1)
-      this.df <- data.frame(x = this.x, label = factor(x@label))
+      labels <- flowClust:::Map(x , rm.outliers=F)
+      # this.y <- pre.obj$ymin - (pre.obj$ylim[2]-pre.obj$ymin)/100*(j<-j+1)
+      this.df <- data.frame(x = this.x, label = factor(labels))
       p <- p + geom_rug(data = this.df, mapping = aes(x = x, y = -2, color = label), position = "jitter", sides = "b", size=0.1)
     # }
   }
