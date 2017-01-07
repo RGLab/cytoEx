@@ -28,4 +28,6 @@ Collate:
     'gating.R'
     'getMFI.R'
     'ggFlowClust.hist.R'
-Suggests: testthat
+    'interpolate.tree.R'
+Suggests:
+    testthat
