@@ -74,11 +74,11 @@ best.dip.ICL <- function(fr, debug.mode=FALSE, plotEnv=new.env(parent=emptyenv()
             emp <- rep(NA,P.ITERS)
 
             sub.sample.dip.p <- function(x) {
-                NEGATIVES <- TRUE
-                while (NEGATIVES) {
-                    sub.s <- sample(cand.data,size=SS.SIZE,replace=TRUE)
-                    if (min(sub.s) > 0) NEGATIVES <- FALSE
-                }
+                #NEGATIVES <- TRUE
+                #while (NEGATIVES) {
+                sub.s <- sample(cand.data,size=SS.SIZE,replace=TRUE)
+                #   if (min(sub.s) > 0) NEGATIVES <- FALSE
+                #}
                 return(suppressMessages(diptest::dip.test(sub.s, qDiptab = qDiptab))$p.value)
             }
 
