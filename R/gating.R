@@ -32,6 +32,7 @@ NULL
 #' }
 #' @rdname gating
 #' @import flowWorkspace
+#' @import openCyto
 setMethod("gating", signature = c("GatingSet","missing"),
           definition = function(x, y, ...) {
 
@@ -74,7 +75,7 @@ gating.subnode <- function(parent, gs
     #for now we use the first sample
     fr <- fs[[1, use.exprs = FALSE]]
     #exclude the non-stained channels
-    channels <- getfluorescentChannels(fr)
+    channels <- cytoUtils:::getfluorescentChannels(fr)
     fr <- fs[[1,channels]]
 
     nCell <- nrow(fr)

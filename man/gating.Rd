@@ -56,4 +56,3 @@ gating(gs2, debug.mode = TRUE) #turn on the debug mode to generate plots and mes
 
 }
 }
-

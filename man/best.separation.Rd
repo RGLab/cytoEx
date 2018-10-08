@@ -46,4 +46,3 @@ objs <- best.separation(flist, fr, debug.mode = TRUE) #turn on the debug mode to
 objs[["metrics"]]
 plot(objs[["plotObjs"]])
 }
-

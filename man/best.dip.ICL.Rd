@@ -31,4 +31,3 @@ STEP 2: If a unique minimum p-value exists, select the corresponding channel.
         If multiple channels fall below the threshold, pick model with maximum difference in ICL, where the difference is:
            (ICL from mixture with two components) - (ICL from mixture with three components).
 }
-

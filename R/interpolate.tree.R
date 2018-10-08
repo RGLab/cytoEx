@@ -12,51 +12,72 @@ interpolate.tree <- function(gs)
   all.nodes <- getNodes(gs, showHidden = TRUE)
   for(path in all.leaves)
   {
-    #check the missing markers
-    for(marker in all.markers)
+    ungated.markers <- all.markers[!sapply(all.markers, function(marker)isGated(marker, path))]
+    parents <- path#init the parent with the current path
+    for(marker in ungated.markers)
     {
-      if(!isGated(marker, path))
-      {
-        #find the gate paths associated with marker
+
+        #find the gate paths that has the target gates
         gate.paths <- find.gates(marker, all.nodes)
 
         if(length(gate.paths)>0){
-          #select the nearest neighour
+          #select the nearest neighour among all the candidates
           dist <- sapply(gate.paths, function(gate.path){
-            path.dist(gate.path, path)
+            path.similarity(gate.path, path)
           })
-          ind <- which(dist == min(dist))
-          if(length(ind)!=2)
-            stop("a pair of nearest neighouring paths is expected!")
-          gate.paths <- gate.paths[ind]
-          #add the gates
-          for(gate.path in gate.paths) {
-            gate <- getGate(gs, gate.path)
-            message("copy gate from ", gate.path, " to ", path)
-            add(gs, gate, parent = path, name = basename(gate.path))
-          }
+          ind <- sort(dist, decreasing = TRUE)
+          #pick one pair of gates from the nearest neighours
+          gate.paths <- names(ind[1:2])
+          #validity check to see if they are indeed a pair
+          sameParent <- dirname(gate.paths[1]) == dirname(gate.paths[2])
+          sameTerminal <- setequal(paste0(marker,c("+", "-")), basename(gate.paths))
+          if(!sameParent||!sameTerminal)
+            stop("The source gates are not paired!")
+
+          #add the gates and update parent paths
+          parents <- copy.gates(gs, parents, gate.paths)
+
         }
 
-      }
+
     }
   }
 
 }
 
-#' calculate the distance between two gating paths
+#' copy the gates to the existing parents
+#' @return the new sub tree paths
+copy.gates <- function(gs, parents, gate.paths)
+{
+  sapply(parents, function(parent){
+    sapply(gate.paths, function(gate.path) {
+      gate <- getGate(gs, gate.path)
+      message("copy gate from ", gate.path, " to ", parent)
+      add(gs, gate, parent = parent, name = basename(gate.path))
+      file.path(parent, basename(gate.path))
+    })
+  })
+
+}
+#' calculate the similarity between two gating paths
 #' @param x,y two strings representing the gating paths
 #' @examples
 #' #the first is smaller is than the second one
-#' path.dist("/LYM/singlets/CD8+/CD45RA+/CCR7+", "/LYM/singlets/CD8+/CD45RA-/CD3+")
-#' path.dist("/LYM/singlets/CD8+/CD45RA+/CCR7+", "/LYM/singlets/CD8-/CD45RA-/CD4-/HLADR-/CD3+")
-path.dist <- function(x, y)
+#' path.similarity("/LYM/singlets/CD8+/CD45RA+/CCR7+", "/LYM/singlets/CD8+/CD45RA-/CD3+")
+#' path.similarity("/LYM/singlets/CD8+/CD45RA+/CCR7+", "/LYM/singlets/CD8+/CD45RA-/CCR7+")
+#' path.similarity("/LYM/singlets/CD8+/CD45RA+/CCR7+", "/LYM/singlets/CD8-/CD45RA-/CD4-/HLADR-/CD3+")
+path.similarity <- function(x, y)
 {
   #convert to two vector
   x <- strsplit(x, split = "/")[[1]][-1]
   y <- strsplit(y, split = "/")[[1]][-1]
 
-  for()
-
+  ind <- x%in%y
+  #find pos of the first discrepancy node
+  pos <- which(!ind)
+  if(length(pos)==0)
+    stop("identical path in the same tree?", x)
+  return(pos[1]-1)
 }
 
 #' find the gate paths that terminates with the given marker

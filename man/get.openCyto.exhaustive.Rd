@@ -14,4 +14,3 @@ get.openCyto.exhaustive(gs, node)
 \description{
 get the enviornment that stores the marker selection results
 }
-

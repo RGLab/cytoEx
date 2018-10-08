@@ -14,4 +14,3 @@ node the unique path to the gated population node}
 \description{
 get the metrics table computed by the marker selection method
 }
-

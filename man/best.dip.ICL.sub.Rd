@@ -28,4 +28,3 @@ STEP 2: If a unique minimum p-value exists, select the corresponding channel.
         Subset to only consider models with a positive difference in ICL
         Among these models, pick the model with the minimum mean sub-sampled p-value.
 }
-

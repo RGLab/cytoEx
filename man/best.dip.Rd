@@ -28,4 +28,3 @@ STEP 2: If a unique minimum p-value exists, select the corresponding channel.
        Otherwise, sub-sample from each channel and create distribution of dip-statistic p-values for each candidate channel (those that tied). 
        Compute mean of each sub-sample, and select channel with minimum average p-value.
 }
-

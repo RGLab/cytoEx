@@ -18,4 +18,3 @@ path.similarity("/LYM/singlets/CD8+/CD45RA+/CCR7+", "/LYM/singlets/CD8+/CD45RA-/
 path.similarity("/LYM/singlets/CD8+/CD45RA+/CCR7+", "/LYM/singlets/CD8+/CD45RA-/CCR7+")
 path.similarity("/LYM/singlets/CD8+/CD45RA+/CCR7+", "/LYM/singlets/CD8-/CD45RA-/CD4-/HLADR-/CD3+")
 }
-

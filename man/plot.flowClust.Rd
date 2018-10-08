@@ -14,4 +14,3 @@ node the unique path to the gated population node}
 \description{
 plot the flowClust fitting results for a particular gated node
 }
-

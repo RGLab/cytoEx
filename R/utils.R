@@ -1,19 +1,3 @@
-getLeafNode <- function(gs, ...){
-  nodes <- getNodes(gs, ...)
-  isTerminal <- sapply(nodes,function(thisNode){
-    length(getChildren(gs,thisNode))==0
-  })
-  nodes[isTerminal]
-}
-
-#' @import flowCore
-getfluorescentChannels <- function(fr){
-
-  pd <- pData(parameters(fr))
-  pd <- pd[!is.na(pd[["desc"]]),]
-  pd[["name"]]
-}
-
 #clean the marker name(sometime it is in the form of 'antigen isotypecontrol',e.g 'CD38 APC')
 cleanMarker <- function(marker){
   strsplit(marker, " ")[[1]][[1]]

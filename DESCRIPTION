@@ -15,8 +15,9 @@ Imports:
     ncdfFlow,
     ggcyto (>= 1.1.12),
     ggplot2,
-    diptest (>= 1.75-7)
-RoxygenNote: 5.0.1
+    diptest (>= 1.75-7),
+    cytoUtils
+RoxygenNote: 6.0.1
 Collate:
     'best.ICL.R'
     'best.dip.ICL.R'
@@ -26,7 +27,6 @@ Collate:
     'options.R'
     'utils.R'
     'gating.R'
-    'getMFI.R'
     'ggFlowClust.hist.R'
     'interpolate.tree.R'
 Suggests:

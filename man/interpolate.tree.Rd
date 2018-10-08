@@ -13,4 +13,3 @@ interpolate.tree(gs)
 It is done by copying the gates from the nearest the neighouring branches to the path where the respective
 marker is missing from the existing path. So that the gating tree is more balanced.
 }
-
